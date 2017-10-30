@@ -1,0 +1,176 @@
+mybatis 基础知识
+  对原生态jdbc程序的问题总结
+  frame原理，入门程序
+    增删查改
+mybatis 开发：原始dao开发（程序需要编写dao接口和daoimpl）
+             mapper接口代理开发方法
+mybatis 配置文件 sqlmapconfig.xml
+mybatis 核心：输入输出映射
+mybatis 动态sql
+
+1.原生态jdbc程序中问题总结
+  jdk7,mysql,eclipse
+1.1 jdbc程序：
+    connection
+    preparedstatement
+    resultset
+    反向释放资源
+1.2 问题总结：
+a.数据库连接，使用时创建，不使用立即释放，频繁的开启与关闭数据库，造成数据库资源浪费。
+  SOL:使用数据库连接池。
+b.preparestatement sql相关硬编码到java中，如果修改sql需要重新编译java代码。
+  sol：配置在xml中。
+c.resultset中遍历结果集，存在硬编码。
+  sol：自动映射为java对象。
+  
+2.mybatis 框架
+  mybatis是一个持久层框架，apache旗下顶级项目。
+  自动输入映射，灵活映射为java对象。
+2.1 结构
+  sqlmapconfig.xml是mybatis的全局配置文件，配置了数据元，事物等mybatis运行环境，配置映射文件。
+        mapper.xml（映射文件）
+  
+  sqlsessionfactory()创建sqlsession
+  
+  sqlsession：操作数据库,面向程序员的接口。
+  
+  通过sqlsession 内部的 executor来操作数据库。executor也是一个接口：基本执行器和缓存执行器。
+  
+  mapped statement（底层封装对象）：对数据库存储封装，包括sql语句，参数，输出结果类型。
+  
+3 入门程序
+查询：
+//selectOne和selectList
+单与多
+  public class MyBatisFirst {
+	public void findUserById() throws IOException {
+		String resource = "SqlMapConfig.xml";
+		
+		InputStream input = Resources.getResourceAsStream(resource);
+		
+		SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(input);
+		
+		SqlSession sqlsession = sqlSessionFactory.openSession();
+		//statement = namespace + id;
+		//parameterType
+		User user = sqlsession.selectOne("test.findUserById", 1);
+		
+		sqlsession.close();//release resource
+	}
+  public void findUserByName() throws IOException {
+		String resource = "SqlMapConfig.xml";
+		
+		InputStream input = Resources.getResourceAsStream(resource);
+		
+		SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(input);
+		
+		SqlSession sqlsession = sqlSessionFactory.openSession();
+		//statement = namespace + id;
+		//parameterType
+		List<User> users = sqlsession.selectList("test.findUserByName", "tion");
+		
+		sqlsession.close();//release resource
+	}
+}
+
+user.xml mapper文件
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--#{}表示占位符  -->
+<!-- parameterType 指定占位符传入的参数类型 -->
+<!--id表示接收输入的参数，如果是基本类型，参数名可以任意 -->
+<!-- resultType:输出对象的pojo，不论单条还是多条 -->
+<mapper namespace ="test">
+	<select id ="findUserById" parameterType = "int"，resultType = "org.samlau.mybatis.po.User">
+		SELECT * FROM USER WHERE id = #{id}
+	</select>
+	
+	<!--使用${}可能会引起sql注入-->
+	<select id = "findUserByName" parameterType = "java.lang.String",resultType = "org.samlau.mybatis.po.User">
+		SELECT * FROM USER WHERE USERNAME LIKE '%${value}%'
+	</select>
+</mapper>
+  
+增加： 
+	<insert id ="InsertUser",paramenterType = "org.samlau.mybatis.po.User">
+		<!--获取自增primary key-->
+		<selectKey keyProperty = "id" order = "AFTER" resultType = "java.lang.Integer">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+    INSERT INTO USER(username,birthday,gender,address) value(#{username},#{birthday},#{gender},#{address})
+    
+    或者可以：
+    <!- <selectKey keyProperty = "id" order = "BEFORE" resultType = "java.lang.String">
+			SELECT uuid()
+		</selectKey>
+    
+		INSERT INTO USER(id,username,birthday,gender,address) value(#{id},#{username},#{birthday},#{gender},#{address}) ->
+	</insert>
+
+public void InsertUser() throws IOException {
+		String resource = "SqlMapConfig.xml";
+		
+		InputStream input = Resources.getResourceAsStream(resource);
+		
+		SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(input);
+		
+		SqlSession sqlsession = sqlSessionFactory.openSession();
+		
+		User user = new User();
+    //set user attributes
+		
+    sqlsession.insert("test.InsertUser",user);
+		sqlsession.commit();
+		
+		sqlsession.close();//release resource
+	}
+  删除：
+  	<delete id = "DeleteUser" parameterType = "java.lang.Integer" >
+		DELETE FROM USER WHERE ID = #{id}
+	</delete>
+
+  public void DeleteUser() throws IOException {
+		String resource = "SqlMapConfig.xml";
+		
+		InputStream input = Resources.getResourceAsStream(resource);
+		
+		SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(input);
+		
+		SqlSession sqlsession = sqlSessionFactory.openSession();
+	
+		sqlsession.delete("test.DeleteUser" , 2);
+		sqlsession.commit();
+
+		sqlsession.close();//release resource
+	}
+  修改：
+	<update id = "UpdateUser" parameterType = "org.samlau.mybatis.po.User">
+		UPDATE USER SET USERNAME = #{username} 
+	</update>
+  	public void UpdateUser() throws IOException {
+		String resource = "SqlMapConfig.xml";
+		
+		InputStream input = Resources.getResourceAsStream(resource);
+		
+		SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(input);
+		
+		SqlSession sqlsession = sqlSessionFactory.openSession();
+		
+		User user = new User();
+		sqlsession.update("test.UpdateUser", user);
+		sqlsession.commit();
+
+		sqlsession.close();//release resource
+	}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
