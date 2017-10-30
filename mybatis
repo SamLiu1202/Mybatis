@@ -164,7 +164,10 @@ public void InsertUser() throws IOException {
 
 		sqlsession.close();//release resource
 	}
-  
+ 小结：#{}表示一个占位符号，可以是简单类型，也可以是object
+ 	接受简单类型可以写成其他名称。通过ognl读取对象的属性值。
+	${}表示拼接，可能会有sql注入，所以不建议使用。
+ 
   
   
   
