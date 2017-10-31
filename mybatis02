@@ -1,0 +1,65 @@
+Hibernate & mybatis的区别与应用场景
+hibernate: 标准ORM框架，不需要写sql，自动生成sql，难以对sql语句进行优化。
+  应用场景：适用于需求与变化较少的，固定的中小型项目，如后台管理系统。
+
+mybatis:专注sql本身，需要自己编写sql，对sql优化简单。不完全ORM框架。（输入，输出映射）
+  应用场景：需求变化较多的项目，互联网项目。
+
+1. MyBatisDAO
+  1.1 SqlSession的使用范围
+    sqlsessionfactorybuilder不需要singleton因为下面的sqlsessionfactory已经采用了singleton
+    singleton：通过sqlsessionfactory创建sqlsession(工厂一旦创建，使用一个实例)
+    提供了很多操作数据库的方法：selectone,selectlist...
+    sqlsession线程不安全，除了有接口中的方法，还有数据scope的属性。所以最佳应用场合在方法体内，定义为局部变量。
+  1.2 原始开发dao（写dao和daoimpl）
+      需要向dao实现类中注入sqlsessionfactory,在方法体内创建sqlsession.
+      缺点：大量模版方法重复；statement id硬编码；编译阶段无法查出错误；
+      
+      dao接口：
+      public interface UserDAO {
+	        public User findUserById(int id) throws Exception;
+	
+	        public void insertUser(User user) throws Exception;
+	
+	        public void deleteUser(int id) throws Exception;
+	    
+      }
+      daoimpl：
+      public class UserDAOImpl implements UserDAO{
+	
+              private SqlSessionFactory sqlSessionFactory;
+
+              public UserDAOImpl(SqlSessionFactory sqlSessionFactory) {
+                this.sqlSessionFactory = sqlSessionFactory;
+              }
+
+              @Override
+              public User findUserById(int id) throws Exception {
+                SqlSession sqlSession = sqlSessionFactory.openSession();
+                User user = sqlSession.selectOne("test.findUserById", id);
+
+                sqlSession.close();//release resource
+                return user;
+              }
+
+              @Override
+              public void insertUser(User user) throws Exception {
+                SqlSession sqlsession = sqlSessionFactory.openSession();
+                sqlsession.insert("test.InsertUser",user);
+
+                sqlsession.commit();
+                sqlsession.close();
+              }
+
+              @Override
+              public void deleteUser(int id) throws Exception {
+                SqlSession sqlsession = sqlSessionFactory.openSession();
+
+                sqlsession.delete("test.DeleteUser" , id);
+                sqlsession.commit();
+
+                sqlsession.close();
+
+              }
+       }
+      
