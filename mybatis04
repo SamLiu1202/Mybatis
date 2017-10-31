@@ -1,0 +1,62 @@
+
+sqlmapconfig.xml
+
+property: driver,url,数据库用户名，密码等数据库连接参数。可以单独配置db.properties,只需加载即可。
+  在properties元素体内定义的属性首先被读取
+  然后会读取properties元素中resource或url加载的属性，他会覆盖已读的同名属性。
+  最后读取parameterType传递的属性，他会覆盖已读的同名属性。
+  因此，通过parameterType传递的属性具有最高优先级，resource或url加载的属性次之，最低优先级是properties元素体内定义的属性。
+  所以不要在properties元素内添加任何属性。属性名有一定的特殊值。
+
+settings（全局参数配置）：
+  开启二级缓存，延迟加载等。
+
+typeAliases(别名)：
+  在mapper.xml中定义了许多statement，需要parametertype和resulttype来进行参数设置。如果输入全路径，不方便进行开发。
+  比如integer的别名是int
+  自定义别名：单个别名，批量别名（别名就是类名）。
+
+typeHandlers
+  完成jdbc类型与java类型的转换，通常情况下默认handlers满足需要。
+
+objectFactory
+plugins
+与springmvc整合后废弃
+environments
+  environment
+    transactionManager
+    dataSource
+
+mappers(mapper的配置)：单个映射文件加载：<mapper resource = "mapper/UserMapper.xml"></mapper>
+                      mapper接口加载：<mapper class = ""/>接口与xml文件名保持一致，且在同一个目录中，前提是使用mapper代理方法。
+                      批量加载: <package name = ""/> 推荐使用
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+    PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+<properties resource = "db.properties">
+ <property name = "" value = ""/>
+</properties>
+<!-- 单个别名的定义 -->
+<typeAlias>
+  <typeAlias type = "org.samlau.mybatis.po.User" alias = "user">
+<!-- 批量别名的定义 -->  
+  <package name = "org.samlau.mybatis.po"/>
+</typeAlias>
+  <!-- setup environment with JDBC data source -->
+  <environments default="development">
+    <environment id="development">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/"/>
+      </dataSource>
+    </environment>
+  </environments>
+<mappers>
+	<mapper resource = "sqlMap/user.xml"></mapper>
+	<mapper resource = "mapper/UserMapper.xml"></mapper>
+</mappers>
+</configuration>
