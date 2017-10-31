@@ -1,0 +1,46 @@
+mapper代理开发方法
+编写mapper.xml映射文件。
+编写mapper接口（相当于dao接口）需要遵守一些开发规范，mybatis可以自动生成mapper接口实现类的代理对象。
+  1.在mapper.xml中namespace等于mapper接口地址。
+  2.mapper.java接口中的方法命要与mapper.xml中statement id一致。
+  3.mapper接口中参数的输入类型与xml中的parameterType一致。
+  4.mapper的返回值类型与xml中的resultType一致。
+mapper接口方法参数只能有一个，系统是否不利于维护？
+系统框架中，dao的代码是被业务层公用的，即使只有一个参数，也可以通过包装类的pojo满足不同的业务需求
+注意：持久层方法可以使用包装类型，service方法不建议使用包装类型。
+不利于业务层的可扩展。
+
+主要是对代码的统一生成。
+<mapper namespace ="org.samlau.mybatis.mapper.UserMapper">
+    public interface UserMapper {
+
+      public User findUserById(int id) throws Exception;
+
+      public List<User> findUserByName(String name) throws Exception;
+
+      public void insertUser(User user) throws Exception;
+
+      public void deleteUser(int id) throws Exception;
+    }
+
+如果返回单个的pojo，代理对象内部通过selectone查询数据库。
+如果返回集合对象，代理对象内部通过selectlist查询数据库。
+ 
+ public class UserDAOTest{
+      private SqlSessionFactory sqlSessionFactory;
+
+      public void setUp() throws IOException {
+        String resource = "SqlMapConfig.xml";
+        InputStream input = Resources.getResourceAsStream(resource);
+        this.sqlSessionFactory = new SqlSessionFactoryBuilder().build(input);	
+
+      }
+      public void testfindUserById() throws Exception {
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        //动态代理，是mapper代理的关键。
+        UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
+
+        User user = userMapper.findUserById(1);
+
+      }
+  }
