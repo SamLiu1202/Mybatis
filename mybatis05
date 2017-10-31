@@ -7,4 +7,29 @@ mapper.xml
 在usermapper.xml中定义用户综合查询（查询条件复杂，通过关联查询）
 
 2 输出映射
+  resultType作为输出映射，只有查询出来的列名与pojo的属性名一致，才可以映射成功。如果查询出来的列名和pojo的属性全部不一致，不会创造pojo对象。
+  只有有一条相同，就会生成pojo对象。
+  只有一行且一列，可以用简单类型作为resulttype
+  输出pojo或者pojo列表，在mapper.xml中的resulttype是一样的，只不过在java中返回值是pojo或者list<pojo>
+  
+  resultMap完成高级输出结果映射。如果列名与pojo属性名不一致，通过定义一个resultmap对列名和pojo属性名之间作一个映射关系。
+    定义resultmap
+    使用resultmap作为statement的输出映射类型
+    <resultMap type = '' id=''>
+       <id column = " ", property = " "/>查询结果集中的唯一表示
+       <result/>查询的其他列
+    </resultMap>
+    type:resultmap最终映射的java对象类型，可以使用别名。
+    id:对resultmap的唯一表示。
+    如果在其他的mapper.xml文件中，需要加namespace
+    
 3 动态sql
+  mybatis的核心 对sql语句进行灵活操作，通过表达式来进行判断，对sql进行灵活拼接，组装。
+  对查询条件进行判断，如果查询条件不为空，再进行查询。
+  sql片段，将上面实现的sql代码抽取出来。基于单表来定义sql片段，提高重用性。
+  在sql片段中最好不要包含where.
+  <sql id = ""></sql>
+  使用<include refid=" "></include>如果不在本文件中，加namespace来引用。
+  向sql中传递数组或者list，mybatis使用foreach解析。
+    <foreach collection = "" item = "" open = "" close = "" separator = "" ></foreach>
+    collection:集合属性名，item每次生成的属性名
