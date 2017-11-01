@@ -1,0 +1,57 @@
+mybatis高级映射
+  eg：订单商品数据模型分析。
+  分析思路：
+  1.每张表记录的数据内容
+    分模块对每张表记录内容进行熟悉。
+  2.每张表数据库的字段设置
+    重要的col设置：非空col，外键col
+  3.数据库级别表与表之间的关系。
+    外键关系。
+  4.表与表之间的业务关系。
+  多对多可以拆分为双向一对多
+  
+  一对一映射：
+  resultType：较为简单，如果pojo中没有包括查询出来的列名，需要增加列名对应的属性，就可以完成映射，
+  一般采取继承某个pojo即可，如果没有查询结果的特殊要求建议使用resulttype，但是不能实现延迟加载。
+  
+  resultMap：需要单独定义，实现比较麻烦，如果对查询结果有特殊要求，使用resultmap可以完成将关联查询映射到pojo属性中，
+  而且可以实现延迟加载。
+            <mapper namespace = "org.samlau.mybatis.mapper.OrdersCustomerMapper">
+            <resultMap type ="org.samlau.mybatis.po.Orders" id="OrderCustomerResultMap">
+              <id column = "id" property = "id"/>
+              <result column = "user_id" property = "user_id"/>
+              <!-- 配置映射的关联的信息 -->
+              <!-- association:用于映射关联单个对象的信息 -->
+              <association property = "user" javaType ="cn.itcast.mybatis.po.User">
+                <id column ="user_id" property="id"/>
+                <result column = "username" property = "username"/>
+              </association>
+            </resultMap>
+            <select id = "findOrderByUserResultMap" resultMap = "OrdersCustomerResultMap">
+            </select>
+            <select id = "findOrderByUser" resultType = "org.samlau.mybatis.po.OrderCustomer">
+              SELECT
+              orders.*, USER.username, USER.sex, USER.address, USER.address
+              FROM
+              orders, USER
+              WHERE orders.user_id = USER.id
+            </select>	
+           </mapper>
+  
+  一对多映射：
+    首先在pojo中添加List<orderDetail> orderDetails属性。
+    mybatis使用collection对关联查询的多条记录映射到一个list集合属性中。
+    使用resulttype实现：将订单明细映射到orders中的orderdetails，使用loop遍历，去掉重复记录。
+   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
