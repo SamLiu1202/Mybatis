@@ -43,7 +43,37 @@ mybatis高级映射
     mybatis使用collection对关联查询的多条记录映射到一个list集合属性中。
     使用resulttype实现：将订单明细映射到orders中的orderdetails，使用loop遍历，去掉重复记录。
    
-  
+  many to many:
+    查询用户及用户购买的商品信息。
+    映射思路：将用户信息映射的user中，在user类中添加订单列表属性list<Orders> orderlist
+    在orders中添加list<orderdetail> orderdetails，将订单的明细映射到orderdetails中
+    在orderdetail中添加items属性，将订单明细对应的的商品映射到items中
+    
+    UserMapper.xml
+    <resultMap type = "org.samlau.mybatis.po.User" id = "UserAndItemsResultMap">
+          <id column = "user_id" property = "id"/>
+          <result column = "username" property = "username"/>
+          <!-- 一个用户对应多个订单 -->
+          <collection property = "ordersList" ofType = "org.samlau.mybatis.po.Orders">
+            <id column = "id" property = "id">
+            <result column = "user_id" property = "userId"/>
+            <!-- 一个订单有多个订单明细 -->
+            <collection property = "orderdetails" ofType = "org.samlau.mybatis.po.Orderdetail">
+                <id column = "id" property = "id">
+                <!-- 一个明细对应一个商品 -->
+                <association property = "Items" javaType = "org.samlau.mybatis.po.Items">
+                    <id column = "id" property = "item_id"/>
+                </association>
+            </collection>
+          </collection>
+     </resultMap>
+    针对上面的需求就是用resulttype将查询到的记录映射到一个扩展的pojo，很简单的实现明细清单的功能。
+      一对多是多对多的特例。
+    
+      使用resulttype无法将查询结果映射到pojo对象的pojo属性中，根据对查询结果的遍历需要选择使用resulttype还是resultmap
+      association: 将关联查询信息映射到一个pojo中
+      collection: 将关联查询信息映射到一个list中
+    
   
   
   
