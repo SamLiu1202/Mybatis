@@ -1,0 +1,57 @@
+延迟加载：先从单表查询，需要时再从关联表去关联查询，大大提高数据库性能。
+  使用resultmap可以实现高级映射（使用association,collection实现一对一及一对多映射），association,collection具备延迟加载功能。
+
+使用association实现延迟加载
+  需求：订单查询并且关联查询用户信息。
+mapper.xml
+  需要定义两个mapper的方法对应的statement
+  1.只查询订单信息
+  在查询订单的statement中使用association延迟加载下面的statement
+  2.关联查询用户信息
+  通过上边查询到的订单信息中的user_id去关联查询用户信息
+  <association property = "user" javaType ="cn.itcast.mybatis.po.User" select ="org.samlau.mybatis.mapper.UserMapper.findUserById" column = "id">
+ 			<id column ="user_id" property ="id"/>
+ 			<result column = "username" property = "username"/>
+ 		</association>
+  
+  在config中设置延迟加载
+  <settings>
+		<setting  name = "LazyLoadingEnabled" value ="True"/>
+		<setting name = "aggressiveLazyLoading" value = "False"/>
+	</settings>
+  如果没有mybatis提供的方法，如何实现延迟加载？
+    定义两个mapper方法：
+    1.查询订单列表
+    2.根据用户id查询用户信息
+    先去查询第一个mapper方法，获取订单信息列表
+    在service层中，按需去调用第二个mapper方法去查询用户信息
+    
+    使用延迟加载的方法，先去查询简单的sql，再去按需加载关联查询的其他信息。
+  
+  查询缓存：提高数据库性能，如果缓存中有数据，就不用从数据库中获取，提高了系统性能。
+  
+    一级缓存：默认支持，每个sqlsession对象中有单独的一级缓存(hashmap)，用于存储缓存数据。
+            执行commit时会清空一级缓存，避免脏读。
+            应用：与spring进行整合开发，事物控制是在service中，一个service方法中包括很多mapper方法调用。
+            如果是两次执行service查询相同的信息，不走一级缓存，因为session方法结束，sqlsession缓存清空。
+    
+    二级缓存：需要开启，mapper级别的缓存，多个SQLsession共用二级缓存。
+        二级缓存的范围更大，多个sqlsession可以共享一个usermapper的二级缓存区域。按照namespace划分。
+        除了在config中开启二级缓存，还需要在相应的mapper.xml文件中开启本mapper namespace的二级缓存
+        <cache/> type 缓存的实现类类型
+        设置pojo实现序列化接口serializable，为了将缓存数据取出执行反序列化。因为二级缓存的存储介质不一定在内存，可能在远程。
+        禁用二级缓存 useCache = "false";
+        刷新缓存（clear）flashCache，如果关闭可能会脏读
+        刷新间隔
+        size
+        readOnly
+  
+  mybatis与ehcache整合      
+    如果不使用分布式缓存，缓存的数据在各个服务器单独存储。所以需要对缓存数据进行集中管理。
+    所以需要使用分布式缓存框架。redis,memcached,ehcache
+    整合方法：mybatis提供了一个cache接口，如果要实现自己的缓存逻辑，只需要实现cache接口开发即可。
+    加入ehcache package
+    加入ehcache的配置文件
+  
+            
+            
